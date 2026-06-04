@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ScreenTracker helps you monitor and understand your screen time across applications for healthier digital habits.">
+  <meta name="Zafri" content="IMS566 Individual Assignment">
+  <meta name="theme-color" content="#0B0B12">
+  <title>ScreenTracker - Monitor Your Digital Habits</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+   <link rel="stylesheet" href="css/style.css">
+   
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { display: ['"Space Grotesk"','sans-serif'], body: ['"DM Sans"','sans-serif'] },
+          colors: {
+            base: { 50:'#1d1d69',100:'#12121C',200:'#181825',300:'#1E1E2E',400:'#2A2A3C' },
+            txt: { 50:'#E8E8F0',100:'#B0B0C8',200:'#9898B0',300:'#5A5A72' },
+            accent: { DEFAULT:'#F0A500', light:'#FFB820', dim:'rgba(240,165,0,0.12)' },
+            ok:'#00D68F', bad:'#FF4757',
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+
+<body class="bg-base-50">
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- AUTH SECTION -->
+  <section id="authSection" class="min-h-screen flex relative overflow-hidden">
+    <div class="auth-orb orb-1"></div>
+    <div class="auth-orb orb-2"></div>
+    <div class="auth-orb orb-3"></div>
+
+    <div class="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 relative z-10">
+      <div class="max-w-md text-center">
+        <div class="mb-8 relative inline-block">
+          <div class="w-32 h-24 rounded-xl border-2 border-accent/40 bg-base-200 flex items-center justify-center relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent"></div>
+            <i class="fa-solid fa-chart-line text-4xl text-accent"></i>
+          </div>
+          <div class="w-8 h-3 bg-base-400 mx-auto rounded-b-md"></div>
+          <div class="w-16 h-1.5 bg-base-400 mx-auto rounded-b-md"></div>
+          <div class="absolute -top-6 -right-10 w-14 h-10 rounded-lg bg-base-200 border border-base-400 flex items-center justify-center animate-bounce" style="animation-duration:3s"><i class="fa-solid fa-clock text-ok text-sm"></i></div>
+          <div class="absolute -bottom-4 -left-12 w-14 h-10 rounded-lg bg-base-200 border border-base-400 flex items-center justify-center animate-bounce" style="animation-duration:4s;animation-delay:1s"><i class="fa-solid fa-shield-halved text-accent text-sm"></i></div>
+        </div>
+        <h1 class="font-display text-5xl font-bold mb-4 tracking-tight">Screen<span class="text-accent">Tracker</span></h1>
+        <p class="text-txt-200 text-lg leading-relaxed mb-8">Gain insight into your digital habits. Track application usage, identify patterns, and take control of your screen time.</p>
+        <div class="space-y-3 text-left">
+          <div class="flex items-center gap-3 text-txt-100"><i class="fa-solid fa-chart-pie text-accent w-5 text-center"></i><span>Visual breakdowns of your daily usage</span></div>
+          <div class="flex items-center gap-3 text-txt-100"><i class="fa-solid fa-bell text-accent w-5 text-center"></i><span>Track trends across weeks and months</span></div>
+          <div class="flex items-center gap-3 text-txt-100"><i class="fa-solid fa-layer-group text-accent w-5 text-center"></i><span>Categorize apps by purpose and productivity</span></div>
+          <div class="flex items-center gap-3 text-txt-100"><i class="fa-solid fa-database text-accent w-5 text-center"></i><span>All data stored locally in your browser</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-10 relative z-10">
+      <div class="w-full max-w-md">
+        <div class="lg:hidden text-center mb-8">
+          <h1 class="font-display text-3xl font-bold tracking-tight">Screen<span class="text-accent">Tracker</span></h1>
+          <p class="text-txt-300 text-sm mt-1">Monitor your digital habits</p>
+        </div>
+        <div class="bg-base-200/80 backdrop-blur-xl border border-base-400 rounded-2xl p-8">
+          <div class="flex gap-8 mb-8 border-b border-base-400 pb-1">
+            <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Sign In</button>
+            <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Create Account</button>
+          </div>
+          <div id="authError" class="hidden mb-5 p-3 rounded-lg bg-bad/10 border border-bad/30 text-bad text-sm flex items-center gap-2"><i class="fa-solid fa-circle-exclamation"></i><span id="authErrorText"></span></div>
+
+          <form id="loginForm" onsubmit="handleLogin(event)" novalidate>
+            <div class="mb-5"><label for="loginUser" class="block text-sm font-medium text-txt-200 mb-1.5">Username</label><div class="relative"><i class="fa-solid fa-user input-icon"></i><input type="text" id="loginUser" class="auth-input" placeholder="Enter your username" autocomplete="username" required></div></div>
+            <div class="mb-6"><label for="loginPass" class="block text-sm font-medium text-txt-200 mb-1.5">Password</label><div class="relative"><i class="fa-solid fa-lock input-icon"></i><input type="password" id="loginPass" class="auth-input pr-10" placeholder="Enter your password" autocomplete="current-password" required><button type="button" onclick="togglePwVis('loginPass',this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-txt-300 hover:text-txt-100 transition" aria-label="Toggle password"><i class="fa-solid fa-eye text-sm"></i></button></div></div>
+            <button type="submit" class="w-full py-3 bg-accent hover:bg-accent-light text-base-50 font-display font-semibold rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-accent/20 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-base-50">Sign In</button>
+            <p class="text-txt-300 text-xs text-center mt-4">Demo: <span class="text-txt-200 font-medium">admin</span> / <span class="text-txt-200 font-medium">admin123</span></p>
+          </form>
+
+          <form id="registerForm" class="hidden" onsubmit="handleRegister(event)" novalidate>
+            <div class="mb-4"><label for="regUser" class="block text-sm font-medium text-txt-200 mb-1.5">Username</label><div class="relative"><i class="fa-solid fa-user input-icon"></i><input type="text" id="regUser" class="auth-input" placeholder="Min 3 characters" autocomplete="username" required></div></div>
+            <div class="mb-4"><label for="regEmail" class="block text-sm font-medium text-txt-200 mb-1.5">Email</label><div class="relative"><i class="fa-solid fa-envelope input-icon"></i><input type="email" id="regEmail" class="auth-input" placeholder="you@example.com" autocomplete="email" required></div></div>
+            <div class="mb-4"><label for="regPass" class="block text-sm font-medium text-txt-200 mb-1.5">Password</label><div class="relative"><i class="fa-solid fa-lock input-icon"></i><input type="password" id="regPass" class="auth-input" placeholder="Min 6 characters" autocomplete="new-password" required></div></div>
+            <div class="mb-6"><label for="regConfirm" class="block text-sm font-medium text-txt-200 mb-1.5">Confirm Password</label><div class="relative"><i class="fa-solid fa-lock input-icon"></i><input type="password" id="regConfirm" class="auth-input" placeholder="Re-enter password" autocomplete="new-password" required></div></div>
+            <button type="submit" class="w-full py-3 bg-accent hover:bg-accent-light text-base-50 font-display font-semibold rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-accent/20 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-base-50">Create Account</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- APP SECTION -->
+  <section id="appSection" class="hidden min-h-screen flex">
+    <div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <aside id="sidebar" class="w-[260px] bg-base-100 border-r border-base-400 flex flex-col flex-shrink-0">
+      <div class="p-5 border-b border-base-400">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-accent/15 flex items-center justify-center"><i class="fa-solid fa-display text-accent text-sm"></i></div>
+          <div><h2 class="font-display font-bold text-base leading-none">ScreenTracker</h2><span class="text-txt-300 text-xs">v1.0.0</span></div>
+        </div>
+      </div>
+      <nav class="flex-1 p-4 space-y-1" aria-label="Main navigation">
+        <a class="sidebar-link active" data-page="dashboard" href="#dashboard" onclick="navigateTo('dashboard')"><i class="fa-solid fa-grid-2 w-5 text-center"></i><span>Dashboard</span></a>
+        <a class="sidebar-link" data-page="logs" href="logs.html"><i class="fa-solid fa-clock-rotate-left w-5 text-center"></i><span>Screen Logs</span></a>
+        <a class="sidebar-link" data-page="apps" href="#apps" onclick="navigateTo('apps')"><i class="fa-solid fa-cubes w-5 text-center"></i><span>Applications</span></a>
+        <a class="sidebar-link" data-page="analytics" href="#analytics" onclick="navigateTo('analytics')"><i class="fa-solid fa-chart-column w-5 text-center"></i><span>Analytics</span></a>
+        <a class="sidebar-link" data-page="settings" href="#settings" onclick="navigateTo('settings')"><i class="fa-solid fa-gear w-5 text-center"></i><span>Settings</span></a>
+      </nav>
+      <div class="p-4 border-t border-base-400">
+        <div class="flex items-center gap-3 mb-3 px-2">
+          <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center"><i class="fa-solid fa-user text-accent text-xs"></i></div>
+          <div class="flex-1 min-w-0"><p class="text-sm font-medium truncate" id="sidebarUsername">admin</p><div class="flex items-center gap-1.5"><div class="pulse-dot" style="width:6px;height:6px"></div><span class="text-xs text-ok">Online</span></div></div>
+        </div>
+        <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-txt-300 hover:text-bad hover:bg-bad/10 transition text-sm font-medium"><i class="fa-solid fa-right-from-bracket text-xs"></i><span>Sign Out</span></button>
+      </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-h-screen overflow-hidden">
+      <header class="h-14 bg-base-100/80 backdrop-blur-md border-b border-base-400 flex items-center px-4 lg:px-6 gap-4 flex-shrink-0">
+        <button onclick="toggleSidebar()" class="lg:hidden w-9 h-9 rounded-lg bg-base-200 border border-base-400 flex items-center justify-center text-txt-200 hover:text-txt-50 transition" aria-label="Toggle menu"><i class="fa-solid fa-bars text-sm"></i></button>
+        <h1 id="pageTitle" class="font-display font-semibold text-base">Dashboard</h1>
+        <div class="ml-auto flex items-center gap-3">
+          <span class="hidden sm:block text-txt-300 text-sm" id="currentDate"></span>
+        </div>
+      </header>
+
+      <div class="flex-1 overflow-y-auto p-4 lg:p-6">
+
+        <!-- DASHBOARD -->
+        <div id="page-dashboard" class="page active">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
+            <div class="stat-card"><div class="flex items-center justify-between mb-2"><span class="text-txt-300 text-xs font-medium">Total This Month</span><div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center"><i class="fa-solid fa-hourglass-half text-accent text-xs"></i></div></div><p class="font-display text-xl font-bold" data-counter="183.7">0</p><p class="text-txt-300 text-xs mt-0.5">hours</p></div>
+            <div class="stat-card"><div class="flex items-center justify-between mb-2"><span class="text-txt-300 text-xs font-medium">Daily Average</span><div class="w-8 h-8 rounded-lg bg-ok/10 flex items-center justify-center"><i class="fa-solid fa-chart-simple text-ok text-xs"></i></div></div><p class="font-display text-xl font-bold" data-counter="6.1">0</p><p class="text-txt-300 text-xs mt-0.5">hours per day</p></div>
+            <div class="stat-card"><div class="flex items-center justify-between mb-2"><span class="text-txt-300 text-xs font-medium">Most Used</span><div class="w-8 h-8 rounded-lg bg-[#4FC3F7]/10 flex items-center justify-center"><i class="fa-solid fa-code text-[#4FC3F7] text-xs"></i></div></div><p class="font-display text-xl font-bold">VS Code</p><p class="text-txt-300 text-xs mt-0.5">35.2 hours</p></div>
+            <div class="stat-card"><div class="flex items-center justify-between mb-2"><span class="text-txt-300 text-xs font-medium">Active Days</span><div class="w-8 h-8 rounded-lg bg-[#A78BFA]/10 flex items-center justify-center"><i class="fa-solid fa-calendar-check text-[#A78BFA] text-xs"></i></div></div><p class="font-display text-xl font-bold"><span data-counter="26">0</span><span class="text-txt-300 text-sm font-normal">/30</span></p><p class="text-txt-300 text-xs mt-0.5">days tracked</p></div>
+            <div class="stat-card flex flex-col items-center justify-center"><div class="goal-ring mb-1"><svg width="100" height="100"><circle cx="50" cy="50" r="42" fill="none" stroke="#2A2A3C" stroke-width="6"/><circle id="goalCircle" cx="50" cy="50" r="42" fill="none" stroke="#F0A500" stroke-width="6" stroke-linecap="round" stroke-dasharray="263.9" stroke-dashoffset="263.9"/></svg><div class="goal-ring-text"><span class="font-display font-bold text-lg" id="goalPctText">0%</span><span class="text-txt-300 text-[10px]">of goal</span></div></div><p class="text-txt-300 text-xs font-medium" id="goalLabel">Daily Goal: 8h</p></div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+            <div class="chart-box lg:col-span-2"><div class="flex items-center justify-between mb-4"><h3 class="font-display font-semibold text-sm">Weekly Trend</h3><span class="text-txt-300 text-xs">Last 7 days</span></div><div style="height:240px"><canvas id="weeklyChart"></canvas></div></div>
+            <div class="chart-box"><div class="flex items-center justify-between mb-4"><h3 class="font-display font-semibold text-sm">Distribution</h3><span class="text-txt-300 text-xs">By app</span></div><div style="height:240px"><canvas id="distChart"></canvas></div></div>
+          </div>
+
+          <div class="chart-box">
+            <div class="flex items-center justify-between mb-4"><h3 class="font-display font-semibold text-sm">Recent Activity</h3><button onclick="navigateTo('logs')" class="text-accent text-xs font-medium hover:underline">View all</button></div>
+            <div class="overflow-x-auto"><table class="data-table" id="recentTable"><thead><tr><th>Application</th><th>Duration</th><th>Category</th><th>Time</th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- SCREEN LOGS -->
+        <div id="page-logs" class="page">
+          <div class="flex flex-col sm:flex-row gap-3 mb-4">
+            <div class="relative flex-1"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-txt-300 text-sm"></i><input type="text" id="logSearch" class="auth-input pl-9" placeholder="Search by app name..." oninput="renderLogs()"></div>
+            <div class="relative"><i class="fa-solid fa-tag input-icon"></i><select id="logCategory" class="form-select" onchange="renderLogs()"><option value="all">All Categories</option><option value="Browser">Browser</option><option value="Development">Development</option><option value="Entertainment">Entertainment</option><option value="Communication">Communication</option><option value="Design">Design</option><option value="Productivity">Productivity</option></select></div>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-3 mb-4">
+            <div class="relative flex-1"><i class="fa-solid fa-calendar input-icon"></i><input type="date" id="logDateFrom" class="auth-input pl-9" onchange="renderLogs()"></div>
+            <div class="relative flex-1"><i class="fa-solid fa-calendar-check input-icon"></i><input type="date" id="logDateTo" class="auth-input pl-9" onchange="renderLogs()"></div>
+            <button onclick="clearLogFilters()" class="px-4 py-2 rounded-lg border border-base-400 text-txt-200 text-sm hover:bg-base-300 transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-filter-circle-xmark text-xs"></i>Clear Filters</button>
+            <button onclick="openLogModal()" class="px-4 py-2 rounded-lg bg-accent text-base-50 text-sm font-semibold hover:bg-accent-light transition flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-plus text-xs"></i>Add Log</button>
+          </div>
+          <p class="text-txt-300 text-xs mb-3" id="logCount">Showing 0 entries</p>
+          <div class="chart-box overflow-x-auto"><table class="data-table" id="logsTable"><thead><tr><th data-sort="date">Date <i class="fa-solid fa-sort sort-arrow"></i></th><th data-sort="app">Application <i class="fa-solid fa-sort sort-arrow"></i></th><th data-sort="minutes">Duration <i class="fa-solid fa-sort sort-arrow"></i></th><th data-sort="category">Category <i class="fa-solid fa-sort sort-arrow"></i></th><th data-sort="productive">Productivity <i class="fa-solid fa-sort sort-arrow"></i></th><th>Actions</th></tr></thead><tbody></tbody></table></div>
+          <div class="flex items-center justify-between mt-4" id="logPagination"></div>
+        </div>
+
+        <!-- APPLICATIONS -->
+        <div id="page-apps" class="page">
+          <p class="text-txt-300 text-xs mb-5" id="appsCount">0 applications tracked</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4" id="appsGrid"></div>
+        </div>
+
+        <!-- ANALYTICS -->
+        <div id="page-analytics" class="page">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6" id="categoryCards"></div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <div class="chart-box"><div class="flex items-center justify-between mb-4"><h3 class="font-display font-semibold text-sm">Category Comparison</h3><span class="text-txt-300 text-xs">Hours by category</span></div><div style="height:280px"><canvas id="categoryChart"></canvas></div></div>
+            <div class="chart-box"><div class="flex items-center justify-between mb-4"><h3 class="font-display font-semibold text-sm">Peak Hours</h3><span class="text-txt-300 text-xs">Hourly average</span></div><div style="height:280px"><canvas id="peakChart"></canvas></div></div>
+          </div>
+          <div class="chart-box"><div class="flex items-center justify-between mb-4"><h3 class="font-display font-semibold text-sm">Monthly Trend</h3><span class="text-txt-300 text-xs">Past 4 weeks</span></div><div style="height:260px"><canvas id="monthlyChart"></canvas></div></div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="page-settings" class="page">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="chart-box">
+              <h3 class="font-display font-semibold text-sm mb-5">Daily Goal</h3>
+              <div class="mb-4"><label for="settingGoal" class="block text-sm font-medium text-txt-200 mb-1.5">Screen time limit (hours)</label><div class="relative"><i class="fa-solid fa-bullseye input-icon"></i><input type="number" id="settingGoal" class="auth-input" min="1" max="24" step="0.5" value="8"></div><p class="text-txt-300 text-xs mt-1">Set your maximum recommended daily screen time</p></div>
+              <button onclick="saveGoal()" class="px-5 py-2 bg-accent text-base-50 font-display font-semibold rounded-lg text-sm hover:bg-accent-light transition">Save Goal</button>
+            </div>
+            <div class="chart-box">
+              <h3 class="font-display font-semibold text-sm mb-5">Profile Information</h3>
+              <div class="mb-4"><label class="block text-sm font-medium text-txt-200 mb-1.5">Username</label><input type="text" id="settingUsername" class="auth-input" style="padding-left:1rem" readonly></div>
+              <div class="mb-4"><label class="block text-sm font-medium text-txt-200 mb-1.5">Email</label><input type="email" id="settingEmail" class="auth-input" style="padding-left:1rem" readonly></div>
+              <div class="mb-4"><label class="block text-sm font-medium text-txt-200 mb-1.5">Member Since</label><p class="text-txt-100 text-sm mt-1" id="settingSince"></p></div>
+              <div><label class="block text-sm font-medium text-txt-200 mb-1.5">Total Logs Recorded</label><p class="text-txt-100 text-sm mt-1" id="settingLogCount">0</p></div>
+            </div>
+            <div class="chart-box">
+              <h3 class="font-display font-semibold text-sm mb-5">Data Management</h3>
+              <div class="space-y-3">
+                <button onclick="exportCSV()" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-base-400 hover:bg-base-300 transition text-left"><div class="w-9 h-9 rounded-lg bg-ok/10 flex items-center justify-center"><i class="fa-solid fa-file-csv text-ok text-sm"></i></div><div><p class="text-sm font-medium text-txt-50">Export to CSV</p><p class="text-txt-300 text-xs">Download all screen logs as a spreadsheet</p></div></button>
+                <button onclick="exportJSON()" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-base-400 hover:bg-base-300 transition text-left"><div class="w-9 h-9 rounded-lg bg-[#4FC3F7]/10 flex items-center justify-center"><i class="fa-solid fa-file-code text-[#4FC3F7] text-sm"></i></div><div><p class="text-sm font-medium text-txt-50">Export to JSON</p><p class="text-txt-300 text-xs">Download raw data in JSON format</p></div></button>
+              </div>
+            </div>
+            <div class="chart-box">
+              <h3 class="font-display font-semibold text-sm mb-5">Danger Zone</h3>
+              <div class="space-y-3">
+                <button onclick="confirmAction('Reset all logs to demo data?', resetLogs)" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-accent/30 hover:bg-accent/5 transition text-left"><div class="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center"><i class="fa-solid fa-rotate-left text-accent text-sm"></i></div><div><p class="text-sm font-medium text-txt-50">Reset Logs</p><p class="text-txt-300 text-xs">Restore original demo screen logs</p></div></button>
+                <button onclick="confirmAction('Delete ALL your data permanently? This cannot be undone.', clearAllData)" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-bad/30 hover:bg-bad/5 transition text-left"><div class="w-9 h-9 rounded-lg bg-bad/10 flex items-center justify-center"><i class="fa-solid fa-trash text-bad text-sm"></i></div><div><p class="text-sm font-medium text-txt-50">Clear All Data</p><p class="text-txt-300 text-xs">Remove all logs, settings, and accounts</p></div></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-8 border-t border-base-400 pt-6 pb-4">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-txt-300 text-xs">
+            <p>&copy; ScreenTracker.</p>
+          </div>
+        </footer>
+      </div>
+    </main>
+  </section>
+
+  <!-- ADD/EDIT LOG MODAL -->
+  <div class="modal-overlay" id="logModal">
+    <div class="modal-box">
+      <div class="p-6 border-b border-base-400 flex items-center justify-between">
+        <h3 class="font-display font-semibold text-base" id="logModalTitle">Add Screen Log</h3>
+        <button onclick="closeLogModal()" class="w-8 h-8 rounded-lg hover:bg-base-300 flex items-center justify-center text-txt-300 hover:text-txt-50 transition"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="logForm" onsubmit="saveLog(event)" class="p-6 space-y-4">
+        <input type="hidden" id="logEditId">
+        <div><label class="block text-sm font-medium text-txt-200 mb-1.5">Date</label><div class="relative"><i class="fa-solid fa-calendar input-icon"></i><input type="date" id="logFormDate" class="auth-input" required></div></div>
+        <div><label class="block text-sm font-medium text-txt-200 mb-1.5">Application</label><div class="relative"><i class="fa-solid fa-window-maximize input-icon"></i><input type="text" id="logFormApp" class="auth-input" placeholder="e.g. Chrome, VS Code" required list="appSuggestions"><datalist id="appSuggestions"></datalist></div></div>
+        <div><label class="block text-sm font-medium text-txt-200 mb-1.5">Category</label><div class="relative"><i class="fa-solid fa-tag input-icon"></i><select id="logFormCategory" class="form-select" required><option value="">Select category</option><option value="Browser">Browser</option><option value="Development">Development</option><option value="Entertainment">Entertainment</option><option value="Communication">Communication</option><option value="Design">Design</option><option value="Productivity">Productivity</option></select></div></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-sm font-medium text-txt-200 mb-1.5">Hours</label><div class="relative"><i class="fa-solid fa-clock input-icon"></i><input type="number" id="logFormHours" class="auth-input" min="0" max="24" value="0" required oninput="updateFormDuration()"></div></div>
+          <div><label class="block text-sm font-medium text-txt-200 mb-1.5">Minutes</label><div class="relative"><i class="fa-solid fa-clock input-icon"></i><input type="number" id="logFormMins" class="auth-input" min="0" max="59" value="0" required oninput="updateFormDuration()"></div></div>
+        </div>
+        <div><label class="block text-sm font-medium text-txt-200 mb-1.5">Time of Day</label><div class="relative"><i class="fa-solid fa-sun input-icon"></i><input type="time" id="logFormTime" class="auth-input" required></div></div>
+        <div class="flex items-center gap-3"><input type="checkbox" id="logFormProductive" class="w-4 h-4 rounded accent-[#F0A500]"><label for="logFormProductive" class="text-sm text-txt-200 cursor-pointer">Mark as productive</label></div>
+        <div class="flex gap-3 pt-2">
+          <button type="button" onclick="closeLogModal()" class="flex-1 py-2.5 rounded-lg border border-base-400 text-txt-200 text-sm font-medium hover:bg-base-300 transition">Cancel</button>
+          <button type="submit" class="flex-1 py-2.5 bg-accent text-base-50 font-display font-semibold rounded-lg text-sm hover:bg-accent-light transition">Save Log</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CONFIRM MODAL -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-box" style="max-width:400px">
+      <div class="p-6 text-center">
+        <div class="w-14 h-14 rounded-full bg-bad/10 flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-triangle-exclamation text-bad text-xl"></i></div>
+        <h3 class="font-display font-semibold text-base mb-2">Confirm Action</h3>
+        <p class="text-txt-200 text-sm mb-6" id="confirmText">Are you sure?</p>
+        <div class="flex gap-3">
+          <button onclick="closeConfirmModal()" class="flex-1 py-2.5 rounded-lg border border-base-400 text-txt-200 text-sm font-medium hover:bg-base-300 transition">Cancel</button>
+          <button onclick="executeConfirm()" class="flex-1 py-2.5 bg-bad text-white font-display font-semibold rounded-lg text-sm hover:opacity-90 transition">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT ==================== -->
+  <script>
+    /* DATABASE LAYER — localStorage persistence */
+    const DB = {
+      _get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch { return fallback; } },
+      _set(key, val) { localStorage.setItem(key, JSON.stringify(val)); },
+
+      getUsers()     { return this._get('st_users', {}); },
+      saveUsers(u)   { this._set('st_users', u); },
+      getLogs()      { return this._get('st_logs_' + (currentUser || ''), []); },
+      saveLogs(l)    { if (currentUser) this._set('st_logs_' + currentUser, l); },
+      getSettings()  { return this._get('st_settings_' + (currentUser || ''), { goal: 8 }); },
+      saveSettings(s){ if (currentUser) this._set('st_settings_' + currentUser, s); },
+
+      // Seed demo data on first login for a user
+      seedIfEmpty(user) {
+        const key = 'st_logs_' + user;
+        if (localStorage.getItem(key)) return;
+        this._set(key, demoLogs);
+      }
+    };
+
+    /* DEMO DATA */
+    const DEMO_USERS = { admin: { password: 'admin123', email: 'admin@gmail.com', since: '01-04-2026' }, demo: { password: 'demo123', email: 'demo@gmail.com', since: '15-04-2026' } };
+
+    const APP_META = {
+    'Chrome':    { icon: 'fa-brands fa-chrome',   category: 'Browser',       color: '#4285F4' },
+      'VSCode':   { icon: 'fa-solid fa-code',       category: 'Development',   color: '#4FC3F7' },
+      'YouTube':   { icon: 'fa-brands fa-youtube',   category: 'Entertainment', color: '#FF4444' },
+      'Discord':   { icon: 'fa-brands fa-discord',   category: 'Communication', color: '#7289DA' },
+      'Spotify':   { icon: 'fa-brands fa-spotify',   category: 'Entertainment', color: '#1DB954' },
+      'Zoom':      { icon: 'fa-solid fa-video',      category: 'Communication', color: '#2D8CFF' },
+    };
+
+    const CATEGORY_STYLES = {
+      'Browser':       { bg:'rgba(66,133,244,0.15)',  text:'#6FA8F7' },
+      'Development':   { bg:'rgba(79,195,247,0.15)',  text:'#4FC3F7' },
+      'Entertainment': { bg:'rgba(255,68,68,0.15)',   text:'#FF6B6B' },
+      'Communication': { bg:'rgba(114,137,218,0.15)', text:'#7289DA' },
+      'Design':        { bg:'rgba(242,78,30,0.15)',   text:'#F24E1E' },
+      'Productivity':  { bg:'rgba(255,255,255,0.1)',  text:'#E0E0E0' },
+    };
+
+    const demoLogs = [
+     { id:1,  date:'2026-06-4', app:'Chrome',   hours:3, minutes:24, category:'Browser',       time:'09:15', productive:false },
+      { id:2,  date:'2026-06-3', app:'VSCode',  hours:4, minutes:12, category:'Development',   time:'13:30', productive:true },
+      { id:3,  date:'2026-06-2', app:'Discord',  hours:1, minutes:5,  category:'Communication', time:'18:00', productive:false },
+      { id:6,  date:'2026-06-1', app:'YouTube',  hours:1, minutes:33, category:'Entertainment', time:'15:20', productive:false },
+      { id:7,  date:'2026-05-31', app:'Chrome',   hours:2, minutes:10, category:'Browser',       time:'17:00', productive:false },
+      { id:10, date:'2026-05-30', app:'VSCode',  hours:2, minutes:30, category:'Development',   time:'14:00', productive:true },
+      { id:11, date:'2026-05-16', app:'Chrome',   hours:4, minutes:5,  category:'Browser',       time:'08:30', productive:false },
+      { id:12, date:'2026-05-16', app:'Spotify',  hours:2, minutes:15, category:'Entertainment', time:'12:00', productive:false },
+      { id:14, date:'2026-05-16', app:'Zoom',     hours:1, minutes:0,  category:'Communication', time:'16:00', productive:true },
+      { id:15, date:'2026-05-15', app:'VSCode',  hours:5, minutes:0,  category:'Development',   time:'09:00', productive:true },
+      { id:16, date:'2026-05-15', app:'Discord',  hours:1, minutes:40, category:'Communication', time:'15:00', productive:false },
+      { id:17, date:'2026-05-15', app:'YouTube',  hours:2, minutes:5,  category:'Entertainment', time:'19:00', productive:false },
+      { id:19, date:'2026-05-14', app:'Chrome',   hours:1, minutes:55, category:'Browser',       time:'15:00', productive:false },
+      { id:22, date:'2026-05-13', app:'Spotify',  hours:1, minutes:50, category:'Entertainment', time:'11:30', productive:false },
+      { id:24, date:'2026-05-12', app:'Chrome',   hours:3, minutes:0,  category:'Browser',       time:'09:00', productive:false },
+      { id:25, date:'2026-05-12', app:'VSCode',  hours:4, minutes:45, category:'Development',   time:'12:30', productive:true },
+    ];
+  </script>
+
+  <script>
+    /* STATE */
+    let currentUser = sessionStorage.getItem('st_current_user') || null;
+    let chartInstances = {};
+    let logSort = { field: 'date', dir: 'desc' };
+    let logPage = 1;
+    const LOGS_PER_PAGE = 8;
+    let confirmCallback = null;
+    let nextId = 100;
+
+    /* INITIALIZATION — Merge demo users into localStorage */
+    (function init() {
+      const users = DB.getUsers();
+      Object.entries(DEMO_USERS).forEach(([u, data]) => {
+        if (!users[u]) users[u] = data;
+      });
+      DB.saveUsers(users);
+    })();
+
+    /* TOAST */
+    function showToast(msg, type) {
+      const c = document.getElementById('toastContainer');
+      const icons = { success:'fa-circle-check', error:'fa-circle-xmark', info:'fa-circle-info' };
+      const t = document.createElement('div');
+      t.className = 'toast toast-' + type;
+      t.innerHTML = '<i class="fa-solid ' + (icons[type]||icons.info) + '"></i><span>' + msg + '</span>';
+      c.appendChild(t);
+      requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+      setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3000);
+    }
+
+    /* NAVIGATION */
+    function navigateTo(page) {
+      document.querySelectorAll('.sidebar-link').forEach(l => l.classList.toggle('active', l.dataset.page === page));
+      const titles = { dashboard:'Dashboard', logs:'Screen Logs', apps:'Applications', analytics:'Analytics', settings:'Settings' };
+      document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      if (page === 'dashboard') initDashboard();
+      if (page === 'logs') { logPage = 1; renderLogs(); }
+      if (page === 'apps') renderApps();
+      if (page === 'analytics') initAnalytics();
+      if (page === 'settings') loadSettings();
+      closeSidebar();
+      const scroller = document.querySelector('#appSection main .flex-1.overflow-y-auto');
+      if (scroller) scroller.scrollTop = 0;
+    }
+
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
+    function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+
+    /* UTILITY HELPERS */
+    function getAppMeta(name) { return APP_META[name] || { icon:'fa-solid fa-window-maximize', category:'Other', color:'#888888' }; }
+    function fmtDuration(h, m) { return h + 'h ' + String(m).padStart(2,'0') + 'm'; }
+    function totalMinutes(log) { return (log.hours || 0) * 60 + (log.minutes || 0); }
+    function fmtDate(d) { const dt = new Date(d + 'T00:00:00'); return dt.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }); }
+    function fmtTime(t) { if (!t) return ''; const [h,m] = t.split(':'); const hr = parseInt(h); return ((hr > 12 ? hr - 12 : hr || 12) + ':' + m + ' ' + (hr >= 12 ? 'PM' : 'AM')); }
+
+    /* EXPORT FUNCTIONS */
+    function exportCSV() {
+      const logs = DB.getLogs();
+      if (logs.length === 0) { showToast('No logs to export.', 'error'); return; }
+      let csv = 'Date,Application,Hours,Minutes,Duration,Category,Time,Productive\n';
+      logs.forEach(l => {
+        csv += l.date + ',' + l.app + ',' + l.hours + ',' + l.minutes + ',"' + fmtDuration(l.hours, l.minutes) + '",' + l.category + ',' + (l.time || '') + ',' + (l.productive ? 'Yes' : 'No') + '\n';
+      });
+      downloadFile(csv, 'screentracker_logs.csv', 'text/csv');
+      showToast('CSV exported successfully!', 'success');
+    }
+
+    function exportJSON() {
+      const logs = DB.getLogs();
+      if (logs.length === 0) { showToast('No logs to export.', 'error'); return; }
+      const data = { exported: new Date().toISOString(), user: currentUser, totalLogs: logs.length, logs: logs };
+      downloadFile(JSON.stringify(data, null, 2), 'screentracker_logs.json', 'application/json');
+      showToast('JSON exported successfully!', 'success');
+    }
+
+    function downloadFile(content, filename, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    /* CONFIRM MODAL (replaces window.confirm) */
+    function confirmAction(msg, callback) {
+      document.getElementById('confirmText').textContent = msg;
+      confirmCallback = callback;
+      document.getElementById('confirmModal').classList.add('show');
+    }
+    function closeConfirmModal() { document.getElementById('confirmModal').classList.remove('show'); confirmCallback = null; }
+    function executeConfirm() { if (confirmCallback) confirmCallback(); closeConfirmModal(); }
+
+    /* CHART UTILS */
+    function destroyAllCharts() {
+      Object.values(chartInstances).forEach(c => { if (c) c.destroy(); });
+      chartInstances = {};
+    }
+
+    // Set global Chart.js defaults
+    if (window.Chart) {
+      Chart.defaults.color = '#9898B0';
+      Chart.defaults.borderColor = '#2A2A3C';
+      Chart.defaults.font.family = "'DM Sans', sans-serif";
+    }
+
+    /* KEYBOARD SUPPORT */
+    document.addEventListener('keydown', function(e) {
+      if (e.target.classList.contains('sidebar-link') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.target.click(); }
+      if (e.key === 'Escape') { closeSidebar(); if (typeof closeLogModal === 'function') closeLogModal(); closeConfirmModal(); }
+    });
+
+    // Close modals on overlay click
+    document.getElementById('confirmModal').addEventListener('click', function(e) { if (e.target === this) closeConfirmModal(); });
+    if (document.getElementById('logModal')) {
+      document.getElementById('logModal').addEventListener('click', function(e) { if (e.target === this) closeLogModal(); });
+    }
+  </script>
+
+  <script>
+    /* AUTH */
+    function switchAuthTab(tab) {
+      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+      document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+      clearAuthError();
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      clearAuthError();
+      const u = document.getElementById('loginUser').value.trim();
+      const p = document.getElementById('loginPass').value;
+      if (!u || !p) return showAuthError('Please fill in both username and password.');
+      const users = DB.getUsers();
+      if (!users[u]) return showAuthError('User "' + u + '" does not exist.');
+      if (users[u].password !== p) return showAuthError('Incorrect password. Please try again.');
+      currentUser = u;
+      sessionStorage.setItem('st_current_user', u);
+      DB.seedIfEmpty(u);
+      enterApp();
+      showToast('Welcome back, ' + u + '!', 'success');
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      clearAuthError();
+      const u = document.getElementById('regUser').value.trim();
+      const em = document.getElementById('regEmail').value.trim();
+      const p = document.getElementById('regPass').value;
+      const c = document.getElementById('regConfirm').value;
+      if (!u || !em || !p || !c) return showAuthError('All fields are required.');
+      if (u.length < 3) return showAuthError('Username must be at least 3 characters.');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return showAuthError('Please enter a valid email address.');
+      if (p.length < 6) return showAuthError('Password must be at least 6 characters.');
+      if (p !== c) return showAuthError('Passwords do not match.');
+      const users = DB.getUsers();
+      if (users[u]) return showAuthError('Username "' + u + '" is already taken.');
+      users[u] = { password: p, email: em, since: new Date().toISOString().split('T')[0] };
+      DB.saveUsers(users);
+      currentUser = u;
+      sessionStorage.setItem('st_current_user', u);
+      DB.seedIfEmpty(u);
+      enterApp();
+      showToast('Account created successfully!', 'success');
+    }
+
+    function showAuthError(msg) { const el = document.getElementById('authError'); document.getElementById('authErrorText').textContent = msg; el.classList.remove('hidden'); }
+    function clearAuthError() { document.getElementById('authError').classList.add('hidden'); }
+    function togglePwVis(id, btn) { const i = document.getElementById(id); const ic = btn.querySelector('i'); if (i.type === 'password') { i.type = 'text'; ic.classList.replace('fa-eye','fa-eye-slash'); } else { i.type = 'password'; ic.classList.replace('fa-eye-slash','fa-eye'); } }
+
+    function handleLogout() {
+      destroyAllCharts();
+      currentUser = null;
+      sessionStorage.removeItem('st_current_user');
+      if (document.getElementById('authSection') !== null) {
+        document.getElementById('appSection').classList.add('hidden');
+        document.getElementById('authSection').classList.remove('hidden');
+        const lForm = document.getElementById('loginForm'); if (lForm) lForm.reset();
+        const rForm = document.getElementById('registerForm'); if (rForm) rForm.reset();
+        switchAuthTab('login');
+      } else {
+        window.location.href = 'index.html';
+      }
+      showToast('Signed out successfully.', 'success');
+    }
+
+    // Helper: enterApp is defined in auth.js, we customize it slightly to handle redirection
+    function enterApp() {
+      if (document.getElementById('authSection') !== null) {
+        window.location.href = 'dashboard.html';
+      } else {
+        const authSect = document.getElementById('authSection'); if (authSect) authSect.classList.add('hidden');
+        const appSect = document.getElementById('appSection'); if (appSect) appSect.classList.remove('hidden');
+        const sUsername = document.getElementById('sidebarUsername'); if (sUsername) sUsername.textContent = currentUser;
+        const cDate = document.getElementById('currentDate');
+        if (cDate) {
+          const now = new Date();
+          cDate.textContent = now.toLocaleDateString('en-US', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+        }
+        populateAppSuggestions();
+      }
+    }
+
+    function populateAppSuggestions() {
+      const dl = document.getElementById('appSuggestions');
+      if (dl) {
+        dl.innerHTML = Object.keys(APP_META).map(a => '<option value="' + a + '">').join('');
+      }
+    }
+  </script>
+
+  <script>
+    /* DASHBOARD */
+    function initDashboard() {
+      const logs = DB.getLogs();
+      const totalMin = logs.reduce((s, l) => s + totalMinutes(l), 0);
+      const totalHrs = totalMin / 60;
+      const uniqueDays = [...new Set(logs.map(l => l.date))].length;
+      const dailyAvg = uniqueDays > 0 ? totalHrs / uniqueDays : 0;
+
+      // Update counters
+      const counters = document.querySelectorAll('#page-dashboard [data-counter]');
+      if (counters.length >= 4) {
+        counters[0].dataset.counter = totalHrs.toFixed(1);
+        counters[1].dataset.counter = dailyAvg.toFixed(1);
+        counters[2].dataset.counter = uniqueDays;
+        animateCounters();
+      }
+
+      // Update most used app
+      const appHours = {};
+      logs.forEach(l => { appHours[l.app] = (appHours[l.app] || 0) + totalMinutes(l); });
+      const topApp = Object.entries(appHours).sort((a,b) => b[1] - a[1])[0];
+      if (topApp) {
+        const statCards = document.querySelectorAll('#page-dashboard .stat-card');
+        if (statCards.length >= 3) {
+          statCards[2].querySelector('.font-display').textContent = topApp[0];
+          statCards[2].querySelector('.text-txt-300').textContent = (topApp[1] / 60).toFixed(1) + ' hours';
+        }
+      }
+
+      // Update goal ring
+      const settings = DB.getSettings();
+      const goal = settings.goal || 8;
+      const today = new Date().toISOString().split('T')[0];
+      const todayMin = logs.filter(l => l.date === today).reduce((s, l) => s + totalMinutes(l), 0);
+      const todayHrs = todayMin / 60;
+      const goalPct = Math.min((todayHrs / goal) * 100, 100);
+      const circumference = 2 * Math.PI * 42;
+      const circle = document.getElementById('goalCircle');
+      if (circle) {
+        circle.style.strokeDasharray = circumference;
+        circle.style.strokeDashoffset = circumference - (circumference * goalPct / 100);
+        circle.style.stroke = goalPct >= 100 ? '#FF4757' : '#F0A500';
+      }
+      const pctText = document.getElementById('goalPctText');
+      if (pctText) pctText.textContent = Math.round(goalPct) + '%';
+      
+      const gLabel = document.getElementById('goalLabel');
+      if (gLabel) gLabel.textContent = 'Daily Goal: ' + goal + 'h (' + todayHrs.toFixed(1) + 'h used)';
+      
+      if (goalPct >= 100) showToast('You have exceeded your daily screen time goal!', 'error');
+
+      // Recent table
+      renderRecentTable(logs);
+      // Charts
+      initDashboardCharts(logs, appHours);
+    }
+
+    function animateCounters() {
+      document.querySelectorAll('[data-counter]').forEach(el => {
+        const target = parseFloat(el.dataset.counter);
+        const isFloat = target % 1 !== 0;
+        const duration = 1000;
+        const start = performance.now();
+        function tick(now) {
+          const p = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = isFloat ? (target * eased).toFixed(1) : Math.round(target * eased);
+          if (p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }
+
+    function renderRecentTable(logs) {
+      const sorted = [...logs].sort((a, b) => b.date.localeCompare(a.date) || (b.time || '').localeCompare(a.time || ''));
+      const tbody = document.querySelector('#recentTable tbody');
+      if (tbody) {
+        tbody.innerHTML = sorted.slice(0, 5).map(log => {
+          const meta = getAppMeta(log.app);
+          const cs = CATEGORY_STYLES[log.category] || { bg:'rgba(136,136,136,0.15)', text:'#888' };
+          return '<tr><td><div class="flex items-center gap-2.5"><div class="w-7 h-7 rounded-md flex items-center justify-center" style="background:' + meta.color + '20"><i class="' + meta.icon + ' text-xs" style="color:' + meta.color + '"></i></div><span class="font-medium text-txt-50">' + log.app + '</span></div></td><td class="font-medium text-txt-50">' + fmtDuration(log.hours, log.minutes) + '</td><td><span class="badge" style="background:' + cs.bg + ';color:' + cs.text + '">' + log.category + '</span></td><td class="text-txt-300">' + fmtTime(log.time) + '</td></tr>';
+        }).join('');
+      }
+    }
+
+    function initDashboardCharts(logs, appHours) {
+      if (chartInstances.weekly) chartInstances.weekly.destroy();
+      if (chartInstances.dist) chartInstances.dist.destroy();
+
+      // Build weekly data from logs
+      const weekMap = {};
+      const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        const key = d.toISOString().split('T')[0];
+        weekMap[key] = { label: dayNames[d.getDay()], minutes: 0 };
+      }
+      logs.forEach(l => { if (weekMap[l.date]) weekMap[l.date].minutes += totalMinutes(l); });
+      const weekLabels = Object.values(weekMap).map(w => w.label);
+      const weekValues = Object.values(weekMap).map(w => +(w.minutes / 60).toFixed(1));
+
+      const wChartEl = document.getElementById('weeklyChart');
+      if (wChartEl) {
+        const ctx = wChartEl.getContext('2d');
+        const grad = ctx.createLinearGradient(0, 0, 0, 240);
+        grad.addColorStop(0, 'rgba(240,165,0,0.25)');
+        grad.addColorStop(1, 'rgba(240,165,0,0.0)');
+
+        chartInstances.weekly = new Chart(ctx, {
+          type: 'line',
+          data: { labels: weekLabels, datasets: [{ label: 'Hours', data: weekValues, borderColor: '#F0A500', backgroundColor: grad, borderWidth: 2.5, fill: true, tension: 0.4, pointBackgroundColor: '#F0A500', pointBorderColor: '#181825', pointBorderWidth: 2, pointRadius: 5, pointHoverRadius: 7 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 12 } } }, y: { beginAtZero: true, grid: { color: 'rgba(42,42,60,0.5)' }, ticks: { font: { size: 11 }, callback: v => v + 'h' } } }, interaction: { intersect: false, mode: 'index' } }
+        });
+      }
+
+      // Distribution doughnut
+      const sortedApps = Object.entries(appHours).sort((a,b) => b[1] - a[1]).slice(0, 8);
+      const dChartEl = document.getElementById('distChart');
+      if (dChartEl) {
+        chartInstances.dist = new Chart(dChartEl, {
+          type: 'doughnut',
+          data: { labels: sortedApps.map(a => a[0]), datasets: [{ data: sortedApps.map(a => +(a[1]/60).toFixed(1)), backgroundColor: sortedApps.map(a => (getAppMeta(a[0]).color)), borderColor: '#181825', borderWidth: 2, hoverOffset: 6 }] },
+          options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8, font: { size: 10 }, usePointStyle: true, pointStyle: 'circle' } } } }
+        });
+      }
+    }
+  </script>
+
+  <script>
+    /* SCREEN LOGS — Full CRUD with sort, filter, paginate */
+    function getFilteredLogs() {
+      const logs = DB.getLogs();
+      const searchEl = document.getElementById('logSearch');
+      const search = searchEl ? (searchEl.value || '').toLowerCase() : '';
+      
+      const catEl = document.getElementById('logCategory');
+      const cat = catEl ? catEl.value : 'all';
+      
+      const fromEl = document.getElementById('logDateFrom');
+      const from = fromEl ? fromEl.value : '';
+      
+      const toEl = document.getElementById('logDateTo');
+      const to = toEl ? toEl.value : '';
+
+      return logs.filter(l => {
+        if (search && !l.app.toLowerCase().includes(search)) return false;
+        if (cat !== 'all' && l.category !== cat) return false;
+        if (from && l.date < from) return false;
+        if (to && l.date > to) return false;
+        return true;
+      });
+    }
+
+    function renderLogs() {
+      let logs = getFilteredLogs();
+      // Sort
+      const f = logSort.field;
+      const dir = logSort.dir === 'asc' ? 1 : -1;
+      logs.sort((a, b) => {
+        let va, vb;
+        if (f === 'date') { va = a.date + (a.time||''); vb = b.date + (b.time||''); }
+        else if (f === 'minutes') { va = totalMinutes(a); vb = totalMinutes(b); }
+        else if (f === 'productive') { va = a.productive ? 1 : 0; vb = b.productive ? 1 : 0; }
+        else { va = (a[f] || '').toString().toLowerCase(); vb = (b[f] || '').toString().toLowerCase(); }
+        return va < vb ? -dir : va > vb ? dir : 0;
+      });
+
+      // Update sort arrows
+      document.querySelectorAll('#logsTable thead th[data-sort]').forEach(th => {
+        const arrow = th.querySelector('.sort-arrow');
+        if (arrow) {
+          if (th.dataset.sort === f) { arrow.className = 'fa-solid fa-sort-' + (logSort.dir === 'asc' ? 'up' : 'down') + ' sort-arrow active'; }
+          else { arrow.className = 'fa-solid fa-sort sort-arrow'; }
+        }
+      });
+
+      // Pagination
+      const totalPages = Math.max(1, Math.ceil(logs.length / LOGS_PER_PAGE));
+      if (logPage > totalPages) logPage = totalPages;
+      const start = (logPage - 1) * LOGS_PER_PAGE;
+      const pageLogs = logs.slice(start, start + LOGS_PER_PAGE);
+
+      const countEl = document.getElementById('logCount');
+      if (countEl) {
+        countEl.textContent = 'Showing ' + pageLogs.length + ' of ' + logs.length + ' entries';
+      }
+
+      const tbody = document.querySelector('#logsTable tbody');
+      if (tbody) {
+        if (pageLogs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-txt-300">No logs found. Add one using the button above.</td></tr>';
+        } else {
+          tbody.innerHTML = pageLogs.map(log => {
+            const meta = getAppMeta(log.app);
+            const cs = CATEGORY_STYLES[log.category] || { bg:'rgba(136,136,136,0.15)', text:'#888' };
+            const prod = log.productive ? '<span class="badge" style="background:rgba(0,214,143,0.15);color:#00D68F">Productive</span>' : '<span class="badge" style="background:rgba(255,71,87,0.12);color:#FF6B6B">Non-productive</span>';
+            return '<tr><td class="whitespace-nowrap text-txt-300">' + fmtDate(log.date) + '</td><td><div class="flex items-center gap-2.5"><div class="w-7 h-7 rounded-md flex items-center justify-center" style="background:' + meta.color + '20"><i class="' + meta.icon + ' text-xs" style="color:' + meta.color + '"></i></div><span class="font-medium text-txt-50">' + log.app + '</span></div></td><td class="font-medium text-txt-50">' + fmtDuration(log.hours, log.minutes) + '</td><td><span class="badge" style="background:' + cs.bg + ';color:' + cs.text + '">' + log.category + '</span></td><td>' + prod + '</td><td><div class="flex gap-1.5"><button class="action-btn edit" onclick="editLog(' + log.id + ')" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button><button class="action-btn delete" onclick="confirmAction(\'Delete this log entry?\', function(){ deleteLog(' + log.id + '); })" title="Delete"><i class="fa-solid fa-trash"></i></button></div></td></tr>';
+          }).join('');
+        }
+      }
+
+      // Pagination controls
+      const pag = document.getElementById('logPagination');
+      if (pag) {
+        if (totalPages <= 1) { pag.innerHTML = ''; return; }
+        let pagHTML = '<span class="text-txt-300 text-xs">Page ' + logPage + ' of ' + totalPages + '</span><div class="flex gap-1.5">';
+        pagHTML += '<button onclick="logPage=1;renderLogs()" class="px-2.5 py-1.5 rounded border border-base-400 text-txt-200 text-xs hover:bg-base-300 transition' + (logPage === 1 ? ' opacity-40 pointer-events-none' : '') + '"><i class="fa-solid fa-angles-left"></i></button>';
+        pagHTML += '<button onclick="logPage=Math.max(1,logPage-1);renderLogs()" class="px-2.5 py-1.5 rounded border border-base-400 text-txt-200 text-xs hover:bg-base-300 transition' + (logPage === 1 ? ' opacity-40 pointer-events-none' : '') + '"><i class="fa-solid fa-angle-left"></i></button>';
+        // Show page numbers around current
+        for (let i = Math.max(1, logPage - 1); i <= Math.min(totalPages, logPage + 1); i++) {
+          pagHTML += '<button onclick="logPage=' + i + ';renderLogs()" class="px-2.5 py-1.5 rounded border text-xs transition ' + (i === logPage ? 'border-accent bg-accent/15 text-accent' : 'border-base-400 text-txt-200 hover:bg-base-300') + '">' + i + '</button>';
+        }
+        pagHTML += '<button onclick="logPage=Math.min(' + totalPages + ',logPage+1);renderLogs()" class="px-2.5 py-1.5 rounded border border-base-400 text-txt-200 text-xs hover:bg-base-300 transition' + (logPage === totalPages ? ' opacity-40 pointer-events-none' : '') + '"><i class="fa-solid fa-angle-right"></i></button>';
+        pagHTML += '<button onclick="logPage=' + totalPages + ';renderLogs()" class="px-2.5 py-1.5 rounded border border-base-400 text-txt-200 text-xs hover:bg-base-300 transition' + (logPage === totalPages ? ' opacity-40 pointer-events-none' : '') + '"><i class="fa-solid fa-angles-right"></i></button>';
+        pagHTML += '</div>';
+        pag.innerHTML = pagHTML;
+      }
+    }
+
+    // Attach sorting event listeners on load
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('#logsTable thead th[data-sort]').forEach(th => {
+        th.addEventListener('click', function() {
+          const f = this.dataset.sort;
+          if (logSort.field === f) logSort.dir = logSort.dir === 'asc' ? 'desc' : 'asc';
+          else { logSort.field = f; logSort.dir = 'asc'; }
+          renderLogs();
+        });
+      });
+    });
+
+    function clearLogFilters() {
+      const searchEl = document.getElementById('logSearch'); if (searchEl) searchEl.value = '';
+      const catEl = document.getElementById('logCategory'); if (catEl) catEl.value = 'all';
+      const fromEl = document.getElementById('logDateFrom'); if (fromEl) fromEl.value = '';
+      const toEl = document.getElementById('logDateTo'); if (toEl) toEl.value = '';
+      logPage = 1;
+      renderLogs();
+    }
+
+    /* LOG CRUD — Add / Edit / Delete */
+    function openLogModal(editId) {
+      const modal = document.getElementById('logModal');
+      if (!modal) return;
+      modal.classList.add('show');
+      
+      const form = document.getElementById('logForm');
+      if (form) form.reset();
+      
+      const editIdEl = document.getElementById('logEditId');
+      if (editIdEl) editIdEl.value = '';
+      
+      const modalTitle = document.getElementById('logModalTitle');
+      
+      if (editId) {
+        const log = DB.getLogs().find(l => l.id === editId);
+        if (!log) return;
+        if (modalTitle) modalTitle.textContent = 'Edit Screen Log';
+        if (editIdEl) editIdEl.value = log.id;
+        
+        const fDate = document.getElementById('logFormDate'); if (fDate) fDate.value = log.date;
+        const fApp = document.getElementById('logFormApp'); if (fApp) fApp.value = log.app;
+        const fCat = document.getElementById('logFormCategory'); if (fCat) fCat.value = log.category;
+        const fHrs = document.getElementById('logFormHours'); if (fHrs) fHrs.value = log.hours;
+        const fMins = document.getElementById('logFormMins'); if (fMins) fMins.value = log.minutes;
+        const fTime = document.getElementById('logFormTime'); if (fTime) fTime.value = log.time || '';
+        const fProd = document.getElementById('logFormProductive'); if (fProd) fProd.checked = log.productive;
+      } else {
+        if (modalTitle) modalTitle.textContent = 'Add Screen Log';
+        const fDate = document.getElementById('logFormDate'); if (fDate) fDate.value = new Date().toISOString().split('T')[0];
+        const fTime = document.getElementById('logFormTime'); if (fTime) fTime.value = new Date().toTimeString().slice(0, 5);
+      }
+    }
+
+    function closeLogModal() {
+      const modal = document.getElementById('logModal');
+      if (modal) modal.classList.remove('show');
+    }
+
+    function updateFormDuration() {}
+
+    function saveLog(e) {
+      e.preventDefault();
+      const editIdEl = document.getElementById('logEditId');
+      const editId = editIdEl ? editIdEl.value : '';
+      
+      const fDate = document.getElementById('logFormDate');
+      const fApp = document.getElementById('logFormApp');
+      const fCat = document.getElementById('logFormCategory');
+      const fHrs = document.getElementById('logFormHours');
+      const fMins = document.getElementById('logFormMins');
+      const fTime = document.getElementById('logFormTime');
+      const fProd = document.getElementById('logFormProductive');
+
+      const logData = {
+        date: fDate ? fDate.value : '',
+        app: fApp ? fApp.value.trim() : '',
+        category: fCat ? fCat.value : '',
+        hours: fHrs ? parseInt(fHrs.value) || 0 : 0,
+        minutes: fMins ? parseInt(fMins.value) || 0 : 0,
+        time: fTime ? fTime.value : '',
+        productive: fProd ? fProd.checked : false,
+      };
+      
+      if (!logData.app || !logData.category || !logData.date) {
+        showToast('Please fill in all required fields.', 'error');
+        return;
+      }
+      // Auto-detect category from known apps
+      if (APP_META[logData.app] && !logData.category) logData.category = APP_META[logData.app].category;
+
+      let logs = DB.getLogs();
+      if (editId) {
+        const idx = logs.findIndex(l => l.id === parseInt(editId));
+        if (idx !== -1) { logs[idx] = { ...logs[idx], ...logData }; }
+        showToast('Log entry updated.', 'success');
+      } else {
+        nextId = Math.max(nextId, ...logs.map(l => l.id), 0) + 1;
+        logs.push({ id: nextId, ...logData });
+        showToast('New log entry added.', 'success');
+      }
+      DB.saveLogs(logs);
+      closeLogModal();
+      renderLogs();
+    }
+
+    function editLog(id) { openLogModal(id); }
+
+    function deleteLog(id) {
+      let logs = DB.getLogs().filter(l => l.id !== id);
+      DB.saveLogs(logs);
+      showToast('Log entry deleted.', 'info');
+      renderLogs();
+    }
+  </script>
+
+  <script>
+    /* APPLICATIONS PAGE */
+    function renderApps() {
+      const logs = DB.getLogs();
+      const appMap = {};
+      logs.forEach(l => {
+        if (!appMap[l.app]) appMap[l.app] = { name: l.app, totalMin: 0, count: 0, category: l.category };
+        appMap[l.app].totalMin += totalMinutes(l);
+        appMap[l.app].count++;
+      });
+      const appList = Object.values(appMap).sort((a, b) => b.totalMin - a.totalMin);
+      const maxHrs = appList.length > 0 ? appList[0].totalMin / 60 : 1;
+
+      const countEl = document.getElementById('appsCount');
+      if (countEl) {
+        countEl.textContent = appList.length + ' application' + (appList.length !== 1 ? 's' : '') + ' tracked';
+      }
+
+      const grid = document.getElementById('appsGrid');
+      if (grid) {
+        if (appList.length === 0) {
+          grid.innerHTML = '<div class="col-span-full text-center py-12 text-txt-300"><i class="fa-solid fa-cube text-3xl mb-3 opacity-30"></i><p>No application data yet. Add screen logs to see stats here.</p></div>';
+          return;
+        }
+
+        grid.innerHTML = appList.map((app, i) => {
+          const meta = getAppMeta(app.name);
+          const hrs = (app.totalMin / 60).toFixed(1);
+          const pct = Math.round((app.totalMin / 60) / maxHrs * 100);
+          const cs = CATEGORY_STYLES[app.category] || { bg:'rgba(136,136,136,0.15)', text:'#888' };
+          return '<div class="app-card"><div class="flex items-start justify-between mb-4"><div class="flex items-center gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:' + meta.color + '18"><i class="' + meta.icon + ' text-lg" style="color:' + meta.color + '"></i></div><div><h4 class="font-display font-semibold text-txt-50">' + app.name + '</h4><span class="badge mt-0.5" style="background:' + cs.bg + ';color:' + cs.text + '">' + app.category + '</span></div></div></div><div class="flex items-end justify-between mb-3"><div><p class="font-display text-2xl font-bold text-txt-50">' + hrs + '</p><p class="text-txt-300 text-xs">hours (' + app.count + ' sessions)</p></div><span class="text-txt-300 text-sm font-medium">' + pct + '%</span></div><div class="progress-bar"><div class="progress-fill" data-width="' + pct + '" style="background:' + meta.color + '"></div></div></div>';
+        }).join('');
+
+        requestAnimationFrame(() => { setTimeout(() => { grid.querySelectorAll('.progress-fill').forEach(b => b.style.width = b.dataset.width + '%'); }, 80); });
+      }
+    }
+  </script>
+
+  <script>
+    /* ANALYTICS PAGE */
+    function initAnalytics() {
+      const logs = DB.getLogs();
+      renderCategoryCards(logs);
+      initAnalyticsCharts(logs);
+    }
+
+    function renderCategoryCards(logs) {
+      const catMap = {};
+      logs.forEach(l => { catMap[l.category] = (catMap[l.category] || 0) + totalMinutes(l); });
+      const cats = Object.entries(catMap).map(([name, min]) => ({ name, hours: +(min / 60).toFixed(1), color: (CATEGORY_STYLES[name] || { text:'#888' }).text }));
+      const total = cats.reduce((s, c) => s + c.hours, 0);
+      const catIcons = { 'Browser':'fa-solid fa-globe','Development':'fa-solid fa-code','Entertainment':'fa-solid fa-film','Communication':'fa-solid fa-comments','Design':'fa-solid fa-pen-ruler','Productivity':'fa-solid fa-check-double' };
+
+      const container = document.getElementById('categoryCards');
+      if (container) {
+        if (cats.length === 0) { container.innerHTML = '<div class="col-span-full text-center py-8 text-txt-300">No data to analyse.</div>'; return; }
+        container.innerHTML = cats.sort((a,b) => b.hours - a.hours).map(c => {
+          const pct = total > 0 ? ((c.hours / total) * 100).toFixed(1) : '0.0';
+          return '<div class="stat-card"><div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:' + c.color + '18"><i class="' + (catIcons[c.name] || 'fa-solid fa-folder') + ' text-sm" style="color:' + c.color + '"></i></div><div><h4 class="font-display font-semibold text-sm">' + c.name + '</h4><p class="text-txt-300 text-xs">' + pct + '% of total</p></div></div><p class="font-display text-xl font-bold">' + c.hours + ' <span class="text-txt-300 text-sm font-normal">hours</span></p></div>';
+        }).join('');
+      }
+    }
+
+    function initAnalyticsCharts(logs) {
+      if (chartInstances.category) chartInstances.category.destroy();
+      if (chartInstances.peak) chartInstances.peak.destroy();
+      if (chartInstances.monthly) chartInstances.monthly.destroy();
+
+      // Category bar
+      const catMap = {};
+      logs.forEach(l => { catMap[l.category] = (catMap[l.category] || 0) + totalMinutes(l); });
+      const cats = Object.entries(catMap).sort((a,b) => b[1] - a[1]);
+
+      const catChartEl = document.getElementById('categoryChart');
+      if (catChartEl) {
+        chartInstances.category = new Chart(catChartEl, {
+          type: 'bar',
+          data: { labels: cats.map(c => c[0]), datasets: [{ label: 'Hours', data: cats.map(c => +(c[1]/60).toFixed(1)), backgroundColor: cats.map(c => ((CATEGORY_STYLES[c[0]]||{text:'#888'}).text) + '80'), borderColor: cats.map(c => (CATEGORY_STYLES[c[0]]||{text:'#888'}).text), borderWidth: 1.5, borderRadius: 6, barPercentage: 0.6 }] },
+          options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(42,42,60,0.5)' }, ticks: { font: { size: 11 }, callback: v => v + 'h' } }, y: { grid: { display: false }, ticks: { font: { size: 12, weight: '500' } } } } }
+        });
+      }
+
+      // Peak hours — derive from log times
+      const hourBuckets = new Array(24).fill(0);
+      const hourCounts = new Array(24).fill(0);
+      logs.forEach(l => {
+        if (l.time) {
+          const h = parseInt(l.time.split(':')[0]);
+          if (!isNaN(h) && h >= 0 && h < 24) { hourBuckets[h] += totalMinutes(l); hourCounts[h]++; }
+        }
+      });
+      const peakLabels = [];
+      const peakValues = [];
+      for (let h = 6; h <= 23; h++) {
+        const suffix = h >= 12 ? 'PM' : 'AM';
+        const display = h === 0 ? '12AM' : h > 12 ? (h-12) + suffix : h + suffix;
+        peakLabels.push(display);
+        peakValues.push(hourCounts[h] > 0 ? Math.round(hourBuckets[h] / hourCounts[h]) : 0);
+      }
+
+      const peakChartEl = document.getElementById('peakChart');
+      if (peakChartEl) {
+        const peakCtx = peakChartEl.getContext('2d');
+        const peakGrad = peakCtx.createLinearGradient(0, 0, 0, 280);
+        peakGrad.addColorStop(0, 'rgba(0,214,143,0.3)');
+        peakGrad.addColorStop(1, 'rgba(0,214,143,0.0)');
+
+        chartInstances.peak = new Chart(peakCtx, {
+          type: 'line',
+          data: { labels: peakLabels, datasets: [{ label: 'Avg Minutes', data: peakValues, borderColor: '#00D68F', backgroundColor: peakGrad, borderWidth: 2, fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#00D68F', pointBorderColor: '#181825', pointBorderWidth: 2, pointHoverRadius: 6 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 45 } }, y: { beginAtZero: true, grid: { color: 'rgba(42,42,60,0.5)' }, ticks: { font: { size: 11 }, callback: v => v + 'm' } } }, interaction: { intersect: false, mode: 'index' } }
+        });
+      }
+
+      // Monthly trend — 4 weeks from logs
+      const weekProd = [0, 0, 0, 0];
+      const weekNon = [0, 0, 0, 0];
+      logs.forEach(l => {
+        const d = new Date(l.date + 'T00:00:00');
+        const weekIdx = Math.min(3, Math.floor((30 - d.getDate()) / 7));
+        const mins = totalMinutes(l);
+        if (l.productive) weekProd[weekIdx] += mins; else weekNon[weekIdx] += mins;
+      });
+
+      const monChartEl = document.getElementById('monthlyChart');
+      if (monChartEl) {
+        chartInstances.monthly = new Chart(monChartEl, {
+          type: 'bar',
+          data: { labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'], datasets: [
+            { label: 'Productive', data: weekProd.map(m => +(m/60).toFixed(1)), backgroundColor: 'rgba(0,214,143,0.7)', borderColor: '#00D68F', borderWidth: 1, borderRadius: 4, barPercentage: 0.5 },
+            { label: 'Non-productive', data: weekNon.map(m => +(m/60).toFixed(1)), backgroundColor: 'rgba(255,71,87,0.5)', borderColor: '#FF4757', borderWidth: 1, borderRadius: 4, barPercentage: 0.5 }
+          ] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 12, padding: 16, font: { size: 12 }, usePointStyle: true, pointStyle: 'rectRounded' } } }, scales: { x: { grid: { display: false }, stacked: true, ticks: { font: { size: 12 } } }, y: { stacked: true, grid: { color: 'rgba(42,42,60,0.5)' }, ticks: { font: { size: 11 }, callback: v => v + 'h' } } } }
+        });
+      }
+    }
+  </script>
+
+  <script>
+    /* SETTINGS */
+    function loadSettings() {
+      const settings = DB.getSettings();
+      const sGoal = document.getElementById('settingGoal'); if (sGoal) sGoal.value = settings.goal || 8;
+      const sUser = document.getElementById('settingUsername'); if (sUser) sUser.value = currentUser;
+      const users = DB.getUsers();
+      const sEmail = document.getElementById('settingEmail'); if (sEmail) sEmail.value = (users[currentUser] || {}).email || '';
+      const sSince = document.getElementById('settingSince'); if (sSince) sSince.textContent = (users[currentUser] || {}).since ? fmtDate(users[currentUser].since) : 'N/A';
+      const sLogCount = document.getElementById('settingLogCount'); if (sLogCount) sLogCount.textContent = DB.getLogs().length + ' entries';
+    }
+
+    function saveGoal() {
+      const sGoal = document.getElementById('settingGoal');
+      const val = sGoal ? parseFloat(sGoal.value) : 8;
+      if (!val || val < 1 || val > 24) { showToast('Goal must be between 1 and 24 hours.', 'error'); return; }
+      const settings = DB.getSettings();
+      settings.goal = val;
+      DB.saveSettings(settings);
+      showToast('Daily goal updated to ' + val + ' hours.', 'success');
+    }
+
+    /* DATA MANAGEMENT */
+    function resetLogs() {
+      DB.saveLogs(JSON.parse(JSON.stringify(demoLogs)));
+      showToast('Logs reset to demo data.', 'info');
+      navigateTo('logs');
+    }
+
+    function clearAllData() {
+      if (currentUser) {
+        localStorage.removeItem('st_logs_' + currentUser);
+        localStorage.removeItem('st_settings_' + currentUser);
+      }
+      showToast('All your data has been cleared.', 'info');
+      navigateTo('dashboard');
+    }
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (currentUser) {
+        enterApp();
+        const hash = window.location.hash.replace('#', '');
+        if (hash === 'logs') {
+          window.location.href = 'logs.html';
+        } else if (hash && hash !== 'dashboard') {
+          navigateTo(hash);
+        }
+      }
+    });
+
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'logs') {
+        window.location.href = 'logs.html';
+      } else if (hash) {
+        navigateTo(hash);
+      }
+    });
+  </script>
+</body>
+</html>

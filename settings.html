@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ScreenTracker helps you monitor and understand your screen time across applications for healthier digital habits.">
+  <meta name="Zafri" content="IMS566 Individual Assignment">
+  <meta name="theme-color" content="#0B0B12">
+  <title>ScreenTracker - Settings</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { display: ['"Space Grotesk"','sans-serif'], body: ['"DM Sans"','sans-serif'] },
+          colors: {
+            base: { 50:'#1d1d69',100:'#12121C',200:'#181825',300:'#1E1E2E',400:'#2A2A3C' },
+            txt: { 50:'#E8E8F0',100:'#B0B0C8',200:'#9898B0',300:'#5A5A72' },
+            accent: { DEFAULT:'#F0A500', light:'#FFB820', dim:'rgba(240,165,0,0.12)' },
+            ok:'#00D68F', bad:'#FF4757',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="bg-base-50">
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- APP SECTION -->
+  <section id="appSection" class="min-h-screen flex">
+    <div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <aside id="sidebar" class="w-[260px] bg-base-100 border-r border-base-400 flex flex-col flex-shrink-0">
+      <div class="p-5 border-b border-base-400">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-accent/15 flex items-center justify-center"><i class="fa-solid fa-display text-accent text-sm"></i></div>
+          <div><h2 class="font-display font-bold text-base leading-none">ScreenTracker</h2><span class="text-txt-300 text-xs">v1.0.0</span></div>
+        </div>
+      </div>
+      <nav class="flex-1 p-4 space-y-1" aria-label="Main navigation">
+        <a class="sidebar-link" href="dashboard.html"><i class="fa-solid fa-grid-2 w-5 text-center"></i><span>Dashboard</span></a>
+        <a class="sidebar-link" href="logs.html"><i class="fa-solid fa-clock-rotate-left w-5 text-center"></i><span>Screen Logs</span></a>
+        <a class="sidebar-link" href="apps.html"><i class="fa-solid fa-cubes w-5 text-center"></i><span>Applications</span></a>
+        <a class="sidebar-link" href="analytics.html"><i class="fa-solid fa-chart-column w-5 text-center"></i><span>Analytics</span></a>
+        <a class="sidebar-link active" href="settings.html"><i class="fa-solid fa-gear w-5 text-center"></i><span>Settings</span></a>
+      </nav>
+      <div class="p-4 border-t border-base-400">
+        <div class="flex items-center gap-3 mb-3 px-2">
+          <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center"><i class="fa-solid fa-user text-accent text-xs"></i></div>
+          <div class="flex-1 min-w-0"><p class="text-sm font-medium truncate" id="sidebarUsername">admin</p><div class="flex items-center gap-1.5"><div class="pulse-dot" style="width:6px;height:6px"></div><span class="text-xs text-ok">Online</span></div></div>
+        </div>
+        <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-txt-300 hover:text-bad hover:bg-bad/10 transition text-sm font-medium"><i class="fa-solid fa-right-from-bracket text-xs"></i><span>Sign Out</span></button>
+      </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-h-screen overflow-hidden">
+      <header class="h-14 bg-base-100/80 backdrop-blur-md border-b border-base-400 flex items-center px-4 lg:px-6 gap-4 flex-shrink-0">
+        <button onclick="toggleSidebar()" class="lg:hidden w-9 h-9 rounded-lg bg-base-200 border border-base-400 flex items-center justify-center text-txt-200 hover:text-txt-50 transition" aria-label="Toggle menu"><i class="fa-solid fa-bars text-sm"></i></button>
+        <h1 id="pageTitle" class="font-display font-semibold text-base">Settings</h1>
+        <div class="ml-auto flex items-center gap-3">
+          <span class="hidden sm:block text-txt-300 text-sm" id="currentDate"></span>
+        </div>
+      </header>
+
+      <div class="flex-1 overflow-y-auto p-4 lg:p-6">
+        <!-- SETTINGS -->
+        <div id="page-settings" class="page active">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="chart-box">
+              <h3 class="font-display font-semibold text-sm mb-5">Daily Goal</h3>
+              <div class="mb-4"><label for="settingGoal" class="block text-sm font-medium text-txt-200 mb-1.5">Screen time limit (hours)</label><div class="relative"><i class="fa-solid fa-bullseye input-icon"></i><input type="number" id="settingGoal" class="auth-input" min="1" max="24" step="0.5" value="8"></div><p class="text-txt-300 text-xs mt-1">Set your maximum recommended daily screen time</p></div>
+              <button onclick="saveGoal()" class="px-5 py-2 bg-accent text-base-50 font-display font-semibold rounded-lg text-sm hover:bg-accent-light transition">Save Goal</button>
+            </div>
+            <div class="chart-box">
+              <h3 class="font-display font-semibold text-sm mb-5">Profile Information</h3>
+              <div class="mb-4"><label class="block text-sm font-medium text-txt-200 mb-1.5">Username</label><input type="text" id="settingUsername" class="auth-input" style="padding-left:1rem" readonly></div>
+              <div class="mb-4"><label class="block text-sm font-medium text-txt-200 mb-1.5">Email</label><input type="email" id="settingEmail" class="auth-input" style="padding-left:1rem" readonly></div>
+              <div class="mb-4"><label class="block text-sm font-medium text-txt-200 mb-1.5">Member Since</label><p class="text-txt-100 text-sm mt-1" id="settingSince"></p></div>
+              <div><label class="block text-sm font-medium text-txt-200 mb-1.5">Total Logs Recorded</label><p class="text-txt-100 text-sm mt-1" id="settingLogCount">0</p></div>
+            </div>
+            <div class="chart-box">
+              <h3 class="font-display font-semibold text-sm mb-5">Data Management</h3>
+              <div class="space-y-3">
+                <button onclick="exportCSV()" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-base-400 hover:bg-base-300 transition text-left"><div class="w-9 h-9 rounded-lg bg-ok/10 flex items-center justify-center"><i class="fa-solid fa-file-csv text-ok text-sm"></i></div><div><p class="text-sm font-medium text-txt-50">Export to CSV</p><p class="text-txt-300 text-xs">Download all screen logs as a spreadsheet</p></div></button>
+                <button onclick="exportJSON()" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-base-400 hover:bg-base-300 transition text-left"><div class="w-9 h-9 rounded-lg bg-[#4FC3F7]/10 flex items-center justify-center"><i class="fa-solid fa-file-code text-[#4FC3F7] text-sm"></i></div><div><p class="text-sm font-medium text-txt-50">Export to JSON</p><p class="text-txt-300 text-xs">Download raw data in JSON format</p></div></button>
+              </div>
+            </div>
+            <div class="chart-box">
+              <h3 class="font-display font-semibold text-sm mb-5">Danger Zone</h3>
+              <div class="space-y-3">
+                <button onclick="confirmAction('Reset all logs to demo data?', resetLogs)" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-accent/30 hover:bg-accent/5 transition text-left"><div class="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center"><i class="fa-solid fa-rotate-left text-accent text-sm"></i></div><div><p class="text-sm font-medium text-txt-50">Reset Logs</p><p class="text-txt-300 text-xs">Restore original demo screen logs</p></div></button>
+                <button onclick="confirmAction('Delete ALL your data permanently? This cannot be undone.', clearAllData)" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-bad/30 hover:bg-bad/5 transition text-left"><div class="w-9 h-9 rounded-lg bg-bad/10 flex items-center justify-center"><i class="fa-solid fa-trash text-bad text-sm"></i></div><div><p class="text-sm font-medium text-txt-50">Clear All Data</p><p class="text-txt-300 text-xs">Remove all logs, settings, and accounts</p></div></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-8 border-t border-base-400 pt-6 pb-4">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-txt-300 text-xs">
+            <p>&copy; ScreenTracker.</p>
+          </div>
+        </footer>
+      </div>
+    </main>
+  </section>
+
+  <!-- CONFIRM MODAL -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-box" style="max-width:400px">
+      <div class="p-6 text-center">
+        <div class="w-14 h-14 rounded-full bg-bad/10 flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-triangle-exclamation text-bad text-xl"></i></div>
+        <h3 class="font-display font-semibold text-base mb-2">Confirm Action</h3>
+        <p class="text-txt-200 text-sm mb-6" id="confirmText">Are you sure?</p>
+        <div class="flex gap-3">
+          <button onclick="closeConfirmModal()" class="flex-1 py-2.5 rounded-lg border border-base-400 text-txt-200 text-sm font-medium hover:bg-base-300 transition">Cancel</button>
+          <button onclick="executeConfirm()" class="flex-1 py-2.5 bg-bad text-white font-display font-semibold rounded-lg text-sm hover:opacity-90 transition">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script>
+    /* DATABASE LAYER — localStorage persistence */
+    const DB = {
+      _get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch { return fallback; } },
+      _set(key, val) { localStorage.setItem(key, JSON.stringify(val)); },
+
+      getUsers()     { return this._get('st_users', {}); },
+      saveUsers(u)   { this._set('st_users', u); },
+      getLogs()      { return this._get('st_logs_' + (currentUser || ''), []); },
+      saveLogs(l)    { if (currentUser) this._set('st_logs_' + currentUser, l); },
+      getSettings()  { return this._get('st_settings_' + (currentUser || ''), { goal: 8 }); },
+      saveSettings(s){ if (currentUser) this._set('st_settings_' + currentUser, s); },
+
+      // Seed demo data on first login for a user
+      seedIfEmpty(user) {
+        const key = 'st_logs_' + user;
+        if (localStorage.getItem(key)) return;
+        this._set(key, demoLogs);
+      }
+    };
+
+    /* DEMO DATA */
+    const DEMO_USERS = { admin: { password: 'admin123', email: 'admin@gmail.com', since: '01-04-2026' }, demo: { password: 'demo123', email: 'demo@gmail.com', since: '15-04-2026' } };
+
+    const APP_META = {
+      'Chrome':    { icon: 'fa-brands fa-chrome',   category: 'Browser',       color: '#4285F4' },
+      'VSCode':   { icon: 'fa-solid fa-code',       category: 'Development',   color: '#4FC3F7' },
+      'YouTube':   { icon: 'fa-brands fa-youtube',   category: 'Entertainment', color: '#FF4444' },
+      'Discord':   { icon: 'fa-brands fa-discord',   category: 'Communication', color: '#7289DA' },
+      'Spotify':   { icon: 'fa-brands fa-spotify',   category: 'Entertainment', color: '#1DB954' },
+      'Zoom':      { icon: 'fa-solid fa-video',      category: 'Communication', color: '#2D8CFF' },
+    };
+
+    const CATEGORY_STYLES = {
+      'Browser':       { bg:'rgba(66,133,244,0.15)',  text:'#6FA8F7' },
+      'Development':   { bg:'rgba(79,195,247,0.15)',  text:'#4FC3F7' },
+      'Entertainment': { bg:'rgba(255,68,68,0.15)',   text:'#FF6B6B' },
+      'Communication': { bg:'rgba(114,137,218,0.15)', text:'#7289DA' },
+      'Design':        { bg:'rgba(242,78,30,0.15)',   text:'#F24E1E' },
+      'Productivity':  { bg:'rgba(255,255,255,0.1)',  text:'#E0E0E0' },
+    };
+
+    const demoLogs = [
+     { id:1,  date:'2026-06-4', app:'Chrome',   hours:3, minutes:24, category:'Browser',       time:'09:15', productive:false },
+      { id:2,  date:'2026-06-3', app:'VSCode',  hours:4, minutes:12, category:'Development',   time:'13:30', productive:true },
+      { id:3,  date:'2026-06-2', app:'Discord',  hours:1, minutes:5,  category:'Communication', time:'18:00', productive:false },
+      { id:6,  date:'2026-06-1', app:'YouTube',  hours:1, minutes:33, category:'Entertainment', time:'15:20', productive:false },
+      { id:7,  date:'2026-05-31', app:'Chrome',   hours:2, minutes:10, category:'Browser',       time:'17:00', productive:false },
+      { id:10, date:'2026-05-30', app:'VSCode',  hours:2, minutes:30, category:'Development',   time:'14:00', productive:true },
+      { id:11, date:'2026-05-16', app:'Chrome',   hours:4, minutes:5,  category:'Browser',       time:'08:30', productive:false },
+      { id:12, date:'2026-05-16', app:'Spotify',  hours:2, minutes:15, category:'Entertainment', time:'12:00', productive:false },
+      { id:14, date:'2026-05-16', app:'Zoom',     hours:1, minutes:0,  category:'Communication', time:'16:00', productive:true },
+      { id:15, date:'2026-05-15', app:'VSCode',  hours:5, minutes:0,  category:'Development',   time:'09:00', productive:true },
+      { id:16, date:'2026-05-15', app:'Discord',  hours:1, minutes:40, category:'Communication', time:'15:00', productive:false },
+      { id:17, date:'2026-05-15', app:'YouTube',  hours:2, minutes:5,  category:'Entertainment', time:'19:00', productive:false },
+      { id:19, date:'2026-05-14', app:'Chrome',   hours:1, minutes:55, category:'Browser',       time:'15:00', productive:false },
+      { id:22, date:'2026-05-13', app:'Spotify',  hours:1, minutes:50, category:'Entertainment', time:'11:30', productive:false },
+      { id:24, date:'2026-05-12', app:'Chrome',   hours:3, minutes:0,  category:'Browser',       time:'09:00', productive:false },
+      { id:25, date:'2026-05-12', app:'VSCode',  hours:4, minutes:45, category:'Development',   time:'12:30', productive:true },
+    ];
+  </script>
+
+  <script>
+    /* STATE */
+    let currentUser = sessionStorage.getItem('st_current_user') || null;
+    let chartInstances = {};
+    let logSort = { field: 'date', dir: 'desc' };
+    let logPage = 1;
+    const LOGS_PER_PAGE = 8;
+    let confirmCallback = null;
+    let nextId = 100;
+
+    /* INITIALIZATION — Merge demo users into localStorage */
+    (function init() {
+      const users = DB.getUsers();
+      Object.entries(DEMO_USERS).forEach(([u, data]) => {
+        if (!users[u]) users[u] = data;
+      });
+      DB.saveUsers(users);
+    })();
+
+    /* TOAST */
+    function showToast(msg, type) {
+      const c = document.getElementById('toastContainer');
+      const icons = { success:'fa-circle-check', error:'fa-circle-xmark', info:'fa-circle-info' };
+      const t = document.createElement('div');
+      t.className = 'toast toast-' + type;
+      t.innerHTML = '<i class="fa-solid ' + (icons[type]||icons.info) + '"></i><span>' + msg + '</span>';
+      c.appendChild(t);
+      requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+      setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3000);
+    }
+
+    /* NAVIGATION */
+    function navigateTo(page) {
+      document.querySelectorAll('.sidebar-link').forEach(l => l.classList.toggle('active', l.dataset.page === page));
+      const titles = { dashboard:'Dashboard', logs:'Screen Logs', apps:'Applications', analytics:'Analytics', settings:'Settings' };
+      document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      if (page === 'dashboard') initDashboard();
+      if (page === 'logs') { logPage = 1; renderLogs(); }
+      if (page === 'apps') renderApps();
+      if (page === 'analytics') initAnalytics();
+      if (page === 'settings') loadSettings();
+      closeSidebar();
+      const scroller = document.querySelector('#appSection main .flex-1.overflow-y-auto');
+      if (scroller) scroller.scrollTop = 0;
+    }
+
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
+    function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+
+    /* UTILITY HELPERS */
+    function getAppMeta(name) { return APP_META[name] || { icon:'fa-solid fa-window-maximize', category:'Other', color:'#888888' }; }
+    function fmtDuration(h, m) { return h + 'h ' + String(m).padStart(2,'0') + 'm'; }
+    function totalMinutes(log) { return (log.hours || 0) * 60 + (log.minutes || 0); }
+    function fmtDate(d) { const dt = new Date(d + 'T00:00:00'); return dt.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }); }
+    function fmtTime(t) { if (!t) return ''; const [h,m] = t.split(':'); const hr = parseInt(h); return ((hr > 12 ? hr - 12 : hr || 12) + ':' + m + ' ' + (hr >= 12 ? 'PM' : 'AM')); }
+
+    /* EXPORT FUNCTIONS */
+    function exportCSV() {
+      const logs = DB.getLogs();
+      if (logs.length === 0) { showToast('No logs to export.', 'error'); return; }
+      let csv = 'Date,Application,Hours,Minutes,Duration,Category,Time,Productive\n';
+      logs.forEach(l => {
+        csv += l.date + ',' + l.app + ',' + l.hours + ',' + l.minutes + ',"' + fmtDuration(l.hours, l.minutes) + '",' + l.category + ',' + (l.time || '') + ',' + (l.productive ? 'Yes' : 'No') + '\n';
+      });
+      downloadFile(csv, 'screentracker_logs.csv', 'text/csv');
+      showToast('CSV exported successfully!', 'success');
+    }
+
+    function exportJSON() {
+      const logs = DB.getLogs();
+      if (logs.length === 0) { showToast('No logs to export.', 'error'); return; }
+      const data = { exported: new Date().toISOString(), user: currentUser, totalLogs: logs.length, logs: logs };
+      downloadFile(JSON.stringify(data, null, 2), 'screentracker_logs.json', 'application/json');
+      showToast('JSON exported successfully!', 'success');
+    }
+
+    function downloadFile(content, filename, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    /* CONFIRM MODAL (replaces window.confirm) */
+    function confirmAction(msg, callback) {
+      document.getElementById('confirmText').textContent = msg;
+      confirmCallback = callback;
+      document.getElementById('confirmModal').classList.add('show');
+    }
+    function closeConfirmModal() { document.getElementById('confirmModal').classList.remove('show'); confirmCallback = null; }
+    function executeConfirm() { if (confirmCallback) confirmCallback(); closeConfirmModal(); }
+
+    /* CHART UTILS */
+    function destroyAllCharts() {
+      Object.values(chartInstances).forEach(c => { if (c) c.destroy(); });
+      chartInstances = {};
+    }
+
+    // Set global Chart.js defaults
+    if (window.Chart) {
+      Chart.defaults.color = '#9898B0';
+      Chart.defaults.borderColor = '#2A2A3C';
+      Chart.defaults.font.family = "'DM Sans', sans-serif";
+    }
+
+    /* KEYBOARD SUPPORT */
+    document.addEventListener('keydown', function(e) {
+      if (e.target.classList.contains('sidebar-link') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.target.click(); }
+      if (e.key === 'Escape') { closeSidebar(); if (typeof closeLogModal === 'function') closeLogModal(); closeConfirmModal(); }
+    });
+
+    // Close modals on overlay click
+    document.getElementById('confirmModal').addEventListener('click', function(e) { if (e.target === this) closeConfirmModal(); });
+    if (document.getElementById('logModal')) {
+      document.getElementById('logModal').addEventListener('click', function(e) { if (e.target === this) closeLogModal(); });
+    }
+  </script>
+
+  <script>
+    /* AUTH */
+    function switchAuthTab(tab) {
+      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+      document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+      clearAuthError();
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      clearAuthError();
+      const u = document.getElementById('loginUser').value.trim();
+      const p = document.getElementById('loginPass').value;
+      if (!u || !p) return showAuthError('Please fill in both username and password.');
+      const users = DB.getUsers();
+      if (!users[u]) return showAuthError('User "' + u + '" does not exist.');
+      if (users[u].password !== p) return showAuthError('Incorrect password. Please try again.');
+      currentUser = u;
+      sessionStorage.setItem('st_current_user', u);
+      DB.seedIfEmpty(u);
+      enterApp();
+      showToast('Welcome back, ' + u + '!', 'success');
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      clearAuthError();
+      const u = document.getElementById('regUser').value.trim();
+      const em = document.getElementById('regEmail').value.trim();
+      const p = document.getElementById('regPass').value;
+      const c = document.getElementById('regConfirm').value;
+      if (!u || !em || !p || !c) return showAuthError('All fields are required.');
+      if (u.length < 3) return showAuthError('Username must be at least 3 characters.');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return showAuthError('Please enter a valid email address.');
+      if (p.length < 6) return showAuthError('Password must be at least 6 characters.');
+      if (p !== c) return showAuthError('Passwords do not match.');
+      const users = DB.getUsers();
+      if (users[u]) return showAuthError('Username "' + u + '" is already taken.');
+      users[u] = { password: p, email: em, since: new Date().toISOString().split('T')[0] };
+      DB.saveUsers(users);
+      currentUser = u;
+      sessionStorage.setItem('st_current_user', u);
+      DB.seedIfEmpty(u);
+      enterApp();
+      showToast('Account created successfully!', 'success');
+    }
+
+    function showAuthError(msg) { const el = document.getElementById('authError'); document.getElementById('authErrorText').textContent = msg; el.classList.remove('hidden'); }
+    function clearAuthError() { document.getElementById('authError').classList.add('hidden'); }
+    function togglePwVis(id, btn) { const i = document.getElementById(id); const ic = btn.querySelector('i'); if (i.type === 'password') { i.type = 'text'; ic.classList.replace('fa-eye','fa-eye-slash'); } else { i.type = 'password'; ic.classList.replace('fa-eye-slash','fa-eye'); } }
+
+    function handleLogout() {
+      destroyAllCharts();
+      currentUser = null;
+      sessionStorage.removeItem('st_current_user');
+      if (document.getElementById('authSection') !== null) {
+        document.getElementById('appSection').classList.add('hidden');
+        document.getElementById('authSection').classList.remove('hidden');
+        const lForm = document.getElementById('loginForm'); if (lForm) lForm.reset();
+        const rForm = document.getElementById('registerForm'); if (rForm) rForm.reset();
+        switchAuthTab('login');
+      } else {
+        window.location.href = 'index.html';
+      }
+      showToast('Signed out successfully.', 'success');
+    }
+
+    function enterApp() {
+      if (document.getElementById('authSection') !== null) {
+        window.location.href = 'dashboard.html';
+      } else {
+        const authSect = document.getElementById('authSection'); if (authSect) authSect.classList.add('hidden');
+        const appSect = document.getElementById('appSection'); if (appSect) appSect.classList.remove('hidden');
+        const sUsername = document.getElementById('sidebarUsername'); if (sUsername) sUsername.textContent = currentUser;
+        const cDate = document.getElementById('currentDate');
+        if (cDate) {
+          const now = new Date();
+          cDate.textContent = now.toLocaleDateString('en-US', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+        }
+        populateAppSuggestions();
+      }
+    }
+
+    function populateAppSuggestions() {
+      const dl = document.getElementById('appSuggestions');
+      if (dl) {
+        dl.innerHTML = Object.keys(APP_META).map(a => '<option value="' + a + '">').join('');
+      }
+    }
+  </script>
+
+  <script>
+    /* SETTINGS */
+    function loadSettings() {
+      const settings = DB.getSettings();
+      const sGoal = document.getElementById('settingGoal'); if (sGoal) sGoal.value = settings.goal || 8;
+      const sUser = document.getElementById('settingUsername'); if (sUser) sUser.value = currentUser;
+      const users = DB.getUsers();
+      const sEmail = document.getElementById('settingEmail'); if (sEmail) sEmail.value = (users[currentUser] || {}).email || '';
+      const sSince = document.getElementById('settingSince'); if (sSince) sSince.textContent = (users[currentUser] || {}).since ? fmtDate(users[currentUser].since) : 'N/A';
+      const sLogCount = document.getElementById('settingLogCount'); if (sLogCount) sLogCount.textContent = DB.getLogs().length + ' entries';
+    }
+
+    function saveGoal() {
+      const sGoal = document.getElementById('settingGoal');
+      const val = sGoal ? parseFloat(sGoal.value) : 8;
+      if (!val || val < 1 || val > 24) { showToast('Goal must be between 1 and 24 hours.', 'error'); return; }
+      const settings = DB.getSettings();
+      settings.goal = val;
+      DB.saveSettings(settings);
+      showToast('Daily goal updated to ' + val + ' hours.', 'success');
+    }
+
+    /* DATA MANAGEMENT */
+    function resetLogs() {
+      DB.saveLogs(JSON.parse(JSON.stringify(demoLogs)));
+      showToast('Logs reset to demo data.', 'info');
+      navigateTo('logs');
+    }
+
+    function clearAllData() {
+      if (currentUser) {
+        localStorage.removeItem('st_logs_' + currentUser);
+        localStorage.removeItem('st_settings_' + currentUser);
+      }
+      showToast('All your data has been cleared.', 'info');
+      navigateTo('dashboard');
+    }
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (currentUser) {
+        const sUsername = document.getElementById('sidebarUsername'); if (sUsername) sUsername.textContent = currentUser;
+        const cDate = document.getElementById('currentDate');
+        if (cDate) {
+          const now = new Date();
+          cDate.textContent = now.toLocaleDateString('en-US', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+        }
+        loadSettings();
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+  </script>
+</body>
+</html>
